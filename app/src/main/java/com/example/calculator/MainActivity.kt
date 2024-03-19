@@ -8,7 +8,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
 
     private var infixExpression : Array<String> = arrayOf()
-    private var postfixExpression : String? = ""
     private var currentValue = "0"
 
     private var count = 0
@@ -81,7 +80,6 @@ class MainActivity : AppCompatActivity() {
     private fun clearExpression() {
         infixExpression = arrayOf()
         count = 0
-        postfixExpression = ""
         currentValue = "0"
         screenDisplay.text = currentValue
     }
@@ -148,9 +146,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addPoint() {
-        if (currentValue.length < 9) {
-            currentValue += "."
+        if (ChangeValue) {
+            currentValue = "0."
             ChangeValue = false
+        }
+        else if (currentValue.length < 9) {
+            currentValue += "."
         }
 
         screenDisplay.text = currentValue
