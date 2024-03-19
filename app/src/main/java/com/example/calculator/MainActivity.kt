@@ -2,12 +2,7 @@ package com.example.calculator
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
 import com.example.calculator.databinding.ActivityMainBinding
-import java.text.NumberFormat
-import java.util.Locale
-import java.math.BigDecimal
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
@@ -78,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         add.setOnClickListener { addOperator("+") }
 
         zero.setOnClickListener { addDigit('0') }
-        dot.setOnClickListener { addDigit('.') }
+        dot.setOnClickListener { addPoint() }
         equals.setOnClickListener { evaluateExpression() }
 
     }
@@ -88,17 +83,17 @@ class MainActivity : AppCompatActivity() {
         count = 0
         postfixExpression = ""
         currentValue = "0"
-        screenDisplay.text = addCommasToInteger(currentValue)
+        screenDisplay.text = currentValue
     }
 
     private fun changeSignCurrentValue() {
         currentValue = (currentValue.toDouble() * -1).toString()
-        screenDisplay.text = addCommasToInteger(currentValue)
+        screenDisplay.text = convertDoubleToInteger(currentValue)
     }
 
     private fun getPercentageCurrentValue() {
         currentValue = (currentValue.toDouble() / 100).toString()
-        screenDisplay.text = currentValue
+        screenDisplay.text = convertDoubleToInteger(currentValue)
     }
 
     private fun isOperator(operator: String) : Boolean {
@@ -110,10 +105,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addOperator(operator : String) {
-        if (!operatorEntered) {
+        if (operatorEntered) {
+            infixExpression[1] = operator
+            return
+        }
+
+        if (infixExpression.isEmpty()) {
             infixExpression += currentValue
             count += 1
-            currentValue = "0"
         }
 
         if (isOperator(infixExpression.last())) {
@@ -126,7 +125,9 @@ class MainActivity : AppCompatActivity() {
                 count += 1
             }
             infixExpression += operator
-            count += 1
+            infixExpression += currentValue
+            count += 2
+            ChangeValue = true
             operatorEntered = true
         }
     }
@@ -143,7 +144,24 @@ class MainActivity : AppCompatActivity() {
 
         operatorEntered = false
 
-        screenDisplay.text = addCommasToInteger(currentValue)
+        screenDisplay.text = currentValue
+    }
+
+    private fun addPoint() {
+        if (currentValue.length < 9) {
+            currentValue += "."
+            ChangeValue = false
+        }
+
+        screenDisplay.text = currentValue
+    }
+
+    private fun convertDoubleToInteger(number: String) : String {
+        if ((number.toDouble() - number.toDouble().toInt().toDouble()) == 0.0) {
+            return number.toDouble().toInt().toString()
+        }
+
+        return number
     }
 
     private fun evaluateExpression() {
@@ -151,13 +169,9 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        if (count == 2) {
-            infixExpression += currentValue
-        }
-
         val operand1 = infixExpression[0].toDouble()
         val oper = infixExpression[1]
-        val operand2 = infixExpression[2].toDouble()
+        val operand2 = currentValue.toDouble()
 
         var result = 0.0
 
@@ -173,16 +187,17 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        currentValue = (BigDecimal(result.toString()).stripTrailingZeros()).toString()
+        currentValue = convertDoubleToInteger(result.toString())
+        if (currentValue.length > 9) {
+            screenDisplay.text = String.format("%.2e", currentValue.toDouble())
+        }
+        else {
+            screenDisplay.text = currentValue
+        }
+
         infixExpression = arrayOf()
-        screenDisplay.text = currentValue
         ChangeValue = true
         count = 0
         operatorEntered = false
-    }
-
-    private fun addCommasToInteger(number: String): String {
-        val formatter = NumberFormat.getInstance(Locale.US)
-        return formatter.format(number.toDouble())
     }
 }
